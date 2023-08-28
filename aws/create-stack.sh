@@ -2,9 +2,11 @@
 
 source .env
 
-aws cloudformation create-stack \
-  --stack-name sandbox-cloudformation \
+aws --profile $AWS_PROFILE \
+  cloudformation create-stack \
+  --stack-name $STACK_NAME \
+  --region $AWS_REGION \
   --capabilities CAPABILITY_IAM \
   --parameters ParameterKey=AwsAccount,ParameterValue=$AWS_ACCOUNT \
-  --template-body cloudformation.yml
+  --template-body file://cloudformation.yml
 

@@ -1,0 +1,19 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.9
+  pre_build:
+    commands:
+      - echo Nothing to do in the pre_build phase...
+  build:
+    commands:
+      - echo Build started on `date`
+      - python --version
+      - git rev-parse HEAD > commit.txt
+      - aws s3 cp README.md s3://sandbox-output/README.md
+      - aws s3 cp commit.txt s3://sandbox-output/commit.txt
+  post_build:
+    commands:
+      - echo Build completed on `date`

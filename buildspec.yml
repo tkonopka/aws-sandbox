@@ -11,11 +11,9 @@ phases:
     commands:
       - echo Build started on `date`
       - python --version
-      - git rev-parse HEAD > commit.txt
-      - cat commit.txt
-      - aws s3 ls
-      - aws s3 cp README.md s3://sandbox-output/README.md
-      - aws s3 cp commit.txt s3://sandbox-output/commit.txt
+      - COMMIT=$(git rev-parse HEAD)
+      - aws sts get-caller-identity
+      - aws s3 cp README.md s3://sandbox-output/{$COMMIT}.md
   post_build:
     commands:
       - echo Build completed on `date`

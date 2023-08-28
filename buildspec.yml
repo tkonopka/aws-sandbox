@@ -12,6 +12,8 @@ phases:
       - echo Build started on `date`
       - python --version
       - git rev-parse HEAD > commit.txt
+      - cat commit.txt
+      - aws s3 ls
       - aws s3 cp README.md s3://sandbox-output/README.md
       - aws s3 cp commit.txt s3://sandbox-output/commit.txt
   post_build:

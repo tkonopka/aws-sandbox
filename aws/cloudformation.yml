@@ -1,0 +1,97 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  StackName:
+    Description: Stack Name
+    Type: String
+    MinLength: 1
+    MaxLength: 255
+    AllowedPattern: ^[a-zA-Z][-a-zA-Z0-9]*$
+    Default: sandbox-cloudformation
+
+Resources:
+  CodeBuildServiceRole:
+    Type: AWS::IAM::Role
+      Properties:
+        Path: /
+        AssumeRolePolicyDocument:
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - codebuild.amazonaws.com
+              Action:
+                - sts:AssumeRole
+        Policies:
+          - PolicyName: CodeBuildPolicy-sandbox-codebuild
+              PolicyDocument:
+                Version: 2012-10-17
+                Statement:
+                  - Effect: Allow
+                    Resource:
+                      - !Sub arn:aws:logs:${AwsAccount}:log-group:/aws/codebuild/sandbox-cloudformation
+                      - !Sub arn:aws:logs:${AwsAccount}:log-group:/aws/codebuild/sandbox-cloudformation:*
+                    Action:
+                      - logs:CreateLogGroup
+                      - logs:CreateLogStream
+                      - logs:PutLogEvents
+                      - s3:PutObject
+                  - Effect: Allow
+                    Resource:
+                      - arn:aws:s3:::codepipeline-eu-west-2-*
+                    Action:
+                      - s3:PutObject
+                      - s3:GetObject
+                      - s3:GetObjectVersion
+                      - s3:GetBucketAcl
+                      - s3:GetBucketLocation
+                  - Effect: Allow
+                    Action:
+                      - codebuild:CreateReportGroup
+                      - codebuild:CreateReport
+                      - codebuild:UpdateReport
+                      - codebuild:BatchPutTestCases
+                      - codebuild:BatchPutCodeCoverages
+                    Resource:
+                      - !Sub arn:aws:codebuild:${AwsAccount}:report-group/sandbox-cloudformation-*
+                  - Effect: Allow
+                    Action:
+                      - s3:PutObject
+                      - s3:GetObject
+                      - s3:GetObjectVersion
+                      - s3:GetBucketAcl
+                      - s3:GetBucketLocation
+                    Resource:
+                      - arn:aws:s3:::sandbox-output
+                      - arn:aws:s3:::sandbox-output/*
+
+  CodeBuild:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: sandbox-codebuild
+      Description: copies code into s3 bucket
+      Environment:
+        Type: LINUX_CONTAINER
+        Image: aws/codebuild/standard:5.0
+        ComputeType: BUILD_GENERAL1_SMALL
+      ServiceRole: !Ref CodeBuildServiceRole
+      ConcurrentBuildLimit: 2
+      ResourceAccessRole: String
+      Source:
+        Type: GITHUB
+        Location: https://github.com/tkonopka/aws-sandbox.git
+        GitCloneDepth: 1
+        BuildSpec: aws/buildspec.yml
+      Triggers:
+        Webhook: true
+        FilterGroups:
+          - - Type: EVENT
+              Pattern: PUSH
+      Artifacts:
+        Type: NO_ARTIFACTS
+      QueuedTimeoutInMinutes: 15
+      TimeoutInMinutes: 15
+      LogsConfig:
+        CloudWatchLogs:
+          Status: ENABLED
+          GroupName: !Sub ${CodeBuildCIBFFProjectName}-CloudWatchLogs-BuildLogGroup-Name

@@ -97,7 +97,3 @@ Resources:
         Type: NO_ARTIFACTS
       QueuedTimeoutInMinutes: 15
       TimeoutInMinutes: 15
-      LogsConfig:
-        CloudWatchLogs:
-          Status: ENABLED
-          GroupName: !Sub ${StackName}-CloudWatchLogs-BuildLogGroup-Name

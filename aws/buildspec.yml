@@ -10,7 +10,6 @@ phases:
   build:
     commands:
       - echo Build started on `date`
-      - python --version
       - COMMIT=$(git rev-parse HEAD)
       - aws s3 cp README.md s3://sandbox-output/${COMMIT}.md
   post_build:
